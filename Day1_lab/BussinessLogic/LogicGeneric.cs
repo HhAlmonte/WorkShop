@@ -3,46 +3,59 @@ using Day1_lab.Interface;
 
 namespace Day1_lab.BussinessLogic
 {
-    public class LogicGeneric<T> : IGenericInterface<T> where T : BaseClass
+    public class LogicGeneric<TEntity> : IGenericInterface<TEntity> where TEntity : BaseClass
     {
-        public static List<T> values = new List<T>();
-        public bool Create(T value)
+        protected List<TEntity> values;
+        private int IdCounter;
+        public LogicGeneric()
         {
-            values.Add(value);
-            return true;
+            values = new List<TEntity>();
+            IdCounter = 1;
+        }
+
+        public List<TEntity> Get()
+        {
+            var result = values.ToList().Where(x => !x.Deleted);
+
+            if (result == null)
+            {
+                throw new Exception("No hay datos para mostrar");
+            }
+
+            return result.ToList();
+        }
+
+        public TEntity Get(int id)
+        {
+            var result =  values.FirstOrDefault(x => x.Id == id);
+
+            if (result == null)
+            {
+                throw new Exception("No hay datos para mostrar");
+            }
+
+            return result;
+        }
+
+        public TEntity Create(TEntity entity)
+        {
+            entity.Id = IdCounter;
+            values.Add(entity);
+            IdCounter++;
+            return entity;
         }
 
         public bool Delete(int valueId)
         {
-            int index = valueId;
-            bool employeesExist = false;
-
-            foreach (T item in values)
-            {
-                if(item.Id != valueId)
-                {
-                    employeesExist = false;
-                    Console.WriteLine("El empleado ingresado no existe. Intentelo despues");
-                }
-                if (employeesExist)
-                {
-                    values.RemoveAt(index);
-                    return true;
-                }
-            }
-
-            return false;
+            var entity = Get(valueId);
+            entity.Deleted = true;
+            return true;
         }
 
-        public bool Modify(T value)
+        public TEntity Modify(TEntity entity)
         {
-            Console.WriteLine("En proceso. Lo sentimos.");
-            return false;
-        }
-
-        public List<T> Read()
-        {
-            return values;
+            Delete(entity.Id);
+            return Create(entity);
         }
     }
 }

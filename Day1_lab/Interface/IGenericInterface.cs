@@ -2,11 +2,12 @@
 
 namespace Day1_lab.Interface
 {
-    public interface IGenericInterface<T> where T : BaseClass 
+    public interface IGenericInterface<TEntity> where TEntity : BaseClass 
     {
-        bool Create(T value);
+        TEntity Create(TEntity value);
         bool Delete(int valueId);
-        bool Modify(T value);
-        List<T> Read();
+        TEntity Modify(TEntity value);
+        List<TEntity> Get();
+        TEntity Get(int id);
     }
 }
