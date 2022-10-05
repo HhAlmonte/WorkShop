@@ -7,6 +7,7 @@ namespace Day1_lab.BussinessLogic
     {
         protected List<TEntity> values;
         private int IdCounter;
+        
         public LogicGeneric()
         {
             values = new List<TEntity>();

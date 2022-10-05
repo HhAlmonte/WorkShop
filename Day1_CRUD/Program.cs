@@ -4,6 +4,7 @@ using Day1_CRUD.Services;
 
 var personService = new PersonService();
 bool active = true;
+
 while (active)
 {
     switch (Menu())
@@ -33,7 +34,7 @@ while (active)
             Console.WriteLine("Fuera de rango");
             break;
     }
-    Console.Beep();
+    /*Console.Beep();*/
 
     int Menu()
     {

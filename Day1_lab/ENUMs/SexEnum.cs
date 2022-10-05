@@ -1,6 +1,6 @@
-﻿namespace Day1_lab.Enums
+﻿namespace Day1_lab.ENUMs
 {
-    public enum GenderEnum
+    public enum SexEnum
     {
         MASCULINO = 1,
         FEMENINO = 2
