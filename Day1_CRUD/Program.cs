@@ -33,6 +33,7 @@ while (active)
             Console.WriteLine("Fuera de rango");
             break;
     }
+    Console.Beep();
 
     int Menu()
     {
