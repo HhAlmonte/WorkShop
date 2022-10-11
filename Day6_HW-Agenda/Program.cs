@@ -1,10 +1,13 @@
+using Day6_HW_Agenda.Domain.Entities;
 using Day6_HW_Agenda.Domain.Interfaces;
 using Day6_HW_Agenda.Domain.IRepositories;
+using Day6_HW_Agenda.DTOs;
 using Day6_HW_Agenda.Persistence.Context;
 using Day6_HW_Agenda.Persistence.Repositories;
 using Day6_HW_Agenda.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
@@ -12,10 +15,29 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+var identityBuilder = builder.Services.AddIdentityCore<User>();
+
+// IdentityBuilder container
+identityBuilder = new IdentityBuilder(identityBuilder.UserType, identityBuilder.Services);
+identityBuilder.AddEntityFrameworkStores<UserDbContext>();
+identityBuilder.AddSignInManager<SignInManager<User>>();
+
 
 // Add services to the container.
-
 builder.Services.AddControllers();
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Token:Key"])),
+        ValidIssuer = builder.Configuration["Token:Issuer"],
+        ValidateIssuer = true,
+        ValidateAudience = false
+    };
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -45,23 +67,13 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 builder.Services.TryAddSingleton<ISystemClock, SystemClock>();
-
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddCors();
 // Scoped
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped(typeof(IGenericRepository<>),typeof(GenericRepository<>));
 
 // Authentication
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
-{
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(builder.Configuration["Token:Key"])),
-        ValidIssuer = builder.Configuration["Token:Issuer"],
-        ValidateIssuer = true,
-        ValidateAudience = false
-    };
-});
 
 // Database Context Services
 builder.Services.AddDbContext<ContactsDbContext>(options =>
@@ -94,6 +106,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseAuthentication();
 
 app.MapControllers();
 

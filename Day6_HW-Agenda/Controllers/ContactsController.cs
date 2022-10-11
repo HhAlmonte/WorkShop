@@ -3,7 +3,6 @@ using Day6_HW_Agenda.Domain.Entities;
 using Day6_HW_Agenda.Domain.IRepositories;
 using Day6_HW_Agenda.DTOs.ContactsDTOs;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -13,38 +12,40 @@ namespace Day6_HW_Agenda.Controllers
     {
         private readonly IGenericRepository<Contacts> _contactsService;
         private readonly IMapper _mapper;
-        private readonly string _email;
-
         public ContactsController(IGenericRepository<Contacts> contactsService, IMapper mapper)
         {
             _mapper = mapper;
-            _email = HttpContext.User?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
             _contactsService = contactsService;
         }
 
-        [Authorize]
+        /*[Authorize]*/
         [HttpPost("CreateContacts")]
-        public async Task<ActionResult<ResponseContactsDto>> CreateContacts([FromForm]CreateContactsDto createContacts)
+        public async Task<ActionResult<ResponseContactsDto>> CreateContacts([FromForm] CreateContactsDto createContacts)
         {
             var contact = _mapper.Map<Contacts>(createContacts);
-            contact.EmailCreator = _email;
-            
+
+            var email = HttpContext.User?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
+
+            contact.EmailCreator = email;
+
             var result = await _contactsService.CreateAsync(contact);
 
-            if (result == null) return BadRequest();
+            if (result == 0) return BadRequest("Hubo un error creando contacto");
 
             var responseContact = _mapper.Map<ResponseContactsDto>(contact);
 
             return responseContact;
         }
 
-        [Authorize]
+        /*[Authorize]*/
         [HttpGet("GetContacts")]
         public async Task<ActionResult<List<ResponseContactsDto>>> GetContacts()
         {
+            var email = HttpContext.User?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
+
             var contacts = await _contactsService.GetAsync();
-            
-            contacts.Where(x => x.EmailCreator == _email);
+
+            contacts.Where(x => x.EmailCreator == email);
 
             if (contacts == null) return BadRequest();
 
@@ -53,29 +54,34 @@ namespace Day6_HW_Agenda.Controllers
             return responseContacts;
         }
 
-        [Authorize]
-        [HttpPut("GetContact/{id}")]
+        /*[Authorize]*/
+        [HttpGet("GetContact/{id}")]
         public async Task<ActionResult<ResponseContactsDto>> GetContact([FromForm] int id)
         {
+            var email = HttpContext.User?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
+
             var contact = await _contactsService.GetAsync(id);
 
             if (contact == null) return BadRequest();
 
-            if (contact.EmailCreator != _email) return BadRequest();
+            if (contact.EmailCreator != email) return BadRequest();
 
             var responseContact = _mapper.Map<ResponseContactsDto>(contact);
 
             return responseContact;
         }
 
-        [Authorize]
+        /*[Authorize]*/
         [HttpPut("ModifyContact/{id}")]
         public async Task<ActionResult<ResponseContactsDto>> ModifyContact([FromForm] int id, ModifyContactsDto modifyContact)
         {
+            var email = HttpContext.User?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
+
             var contact = _mapper.Map<Contacts>(modifyContact);
+
             contact.Id = id;
 
-            if (contact.EmailCreator != _email) return Unauthorized();
+            if (contact.EmailCreator != email) return Unauthorized();
 
             var result = await _contactsService.ModifyAsync(contact);
 
@@ -86,19 +92,21 @@ namespace Day6_HW_Agenda.Controllers
             return response;
         }
 
-        [Authorize]
+        /*[Authorize]*/
         [HttpDelete("DeleteContact/{id}")]
         public async Task<ActionResult<string>> DeleteContact([FromForm] int id)
         {
+            var email = HttpContext.User?.Claims?.FirstOrDefault(x => x.Type == ClaimTypes.Email)?.Value;
+
             var contact = await _contactsService.GetAsync(id);
 
-            if (contact.EmailCreator != _email) return Unauthorized();
+            if (contact.EmailCreator != email) return Unauthorized();
 
-            var result =  _contactsService.Delete(contact);
+            var result = await _contactsService.Delete(contact);
 
-            if (result) return "Contacto eliminado";
+            if (result == 1) return "Contacto eliminado";
 
-            return  "Error eliminando contacto";
+            return "Error eliminando contacto";
         }
     }
 }

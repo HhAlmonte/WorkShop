@@ -14,24 +14,24 @@ namespace Day6_HW_Agenda.Persistence.Repositories
             _context = context;
         }
 
-        public async Task<TEntity> CreateAsync(TEntity value)
+        public async Task<int> CreateAsync(TEntity value)
         {
-            await _context.Set<TEntity>().AddAsync(value);
-            await _context.SaveChangesAsync();
-            return value;
+            _context.Set<TEntity>().Add(value);
+            return await _context.SaveChangesAsync();
         }
-
-        public bool Delete(TEntity value)
+        
+        public async Task<int> Delete(TEntity value)
         {
-            var entity = GetAsync(value.Id);
+            var entity = await GetAsync(value.Id);
             
-            if (entity == null) return false;
-            
-            value.Deleted = true;
+            entity.Deleted = true;
 
-            _context.SaveChanges();
-            
-            return true;
+            return _context.SaveChanges();
+        }
+        public async Task<int> ModifyAsync(TEntity value)
+        {
+            _context.Set<TEntity>().Update(value);
+            return await _context.SaveChangesAsync();
         }
 
         public async Task<List<TEntity>> GetAsync()
@@ -48,11 +48,5 @@ namespace Day6_HW_Agenda.Persistence.Repositories
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<TEntity> ModifyAsync(TEntity value)
-        {
-            _context.Set<TEntity>().Update(value);
-            await _context.SaveChangesAsync();
-            return value;
-        }
     }
 }

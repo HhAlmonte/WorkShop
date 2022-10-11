@@ -11,19 +11,16 @@ namespace Day6_HW_Agenda.Controllers
     {
         private readonly UserManager<User> _userManager;
         private readonly SignInManager<User> _signInManager;
-        private readonly IPasswordHasher<User> _passwordHasher;
         private readonly ITokenService _tokenService;
         private readonly IMapper _mapper;
 
         public UserController(UserManager<User> userManager,
                               SignInManager<User> signInManager,
-                              IPasswordHasher<User> passwordHasher,
                               ITokenService tokenService,
                               IMapper mapper)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _passwordHasher = passwordHasher;
             _tokenService = tokenService;
             _mapper = mapper;
         }
@@ -32,11 +29,13 @@ namespace Day6_HW_Agenda.Controllers
         public async Task<ActionResult<ResponseUserDto>> Register([FromForm]RegisterUserDto registerUser)
         {
             var user = _mapper.Map<User>(registerUser);
+
             var result = await _userManager.CreateAsync(user, registerUser.Password);
 
             if (!result.Succeeded) return BadRequest("Error creando el usuario");
 
             var responseUser = _mapper.Map<ResponseUserDto>(user);
+            
             responseUser.Token = _tokenService.CreateToken(user);
 
             return responseUser;
@@ -54,6 +53,7 @@ namespace Day6_HW_Agenda.Controllers
             if (!result.Succeeded) return Unauthorized();
 
             var responseUser = _mapper.Map<ResponseUserDto>(user);
+            
             responseUser.Token = _tokenService.CreateToken(user);
 
             return responseUser;
